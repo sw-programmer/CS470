@@ -1,17 +1,14 @@
 from __future__ import unicode_literals
 import os
+import sys
 import argparse
 from tqdm import tqdm
 import wave
 
 import pandas as pd
-import numpy as np
-import pafy
 from pydub import AudioSegment
-import moviepy.editor as moviepy
 import yt_dlp as youtube_dl
 # import youtube_dl
-from scipy.io.wavfile import read as read_wav
 from youtube_transcript_api import YouTubeTranscriptApi
 
 
@@ -115,5 +112,8 @@ if __name__ == "__main__":
         raise TypeError("Wrong url type is given. Try str for single url or list for multiple instead.")
 
     a_path = get_audio(url)
+    if os.path.isfile(a_path):
+        print("This youtuble audio is alreay added to our data. Done.")
+        sys.exit(0)
     t_result = get_transcript(url, lang)
     make_chunks(a_path, t_result, d_path)
