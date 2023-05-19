@@ -3,12 +3,10 @@ import os
 import sys
 import argparse
 from tqdm import tqdm
-import wave
 
 import pandas as pd
 from pydub import AudioSegment
 import yt_dlp as youtube_dl
-# import youtube_dl
 from youtube_transcript_api import YouTubeTranscriptApi
 
 
@@ -22,14 +20,14 @@ def get_audio(url:str) -> str:
     if isinstance(url, str):
         with youtube_dl.YoutubeDL({}) as ydl:                   # get metadata to designate output path
             meta = ydl.extract_info(url, download=False) 
-        path = f"./Data/wav/{meta['title']}.{meta['format']}"
+        path = f"./Data/mp3/{meta['title']}.{meta['format']}"
 
         ydl_opts = {                                            # get audio(.wav w/ 16kHz sampling rate) into designated output path
             'format': 'bestaudio/best',
             'outtmpl': path,
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'wav'
+                'preferredcodec': 'mp3'
             }],
             'postprocessor_args': [
                 '-ar', '16000'
@@ -38,8 +36,9 @@ def get_audio(url:str) -> str:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
-        path += '.wav'
-        assert wave.open(path, "rb").getframerate() == 16000
+        path += '.mp3'
+        song = AudioSegment.from_mp3(path)
+        assert song.frame_rate == 16000
 
     else:   #TODO
         pass
@@ -90,9 +89,9 @@ def make_chunks(a_path:str, t_result:tuple((list, bool)), d_path:str):
     if os.path.isfile(d_path):          # updata data file if it exists
         df_0 = pd.read_csv(d_path)
         df_0 = pd.concat([df_0, df])
-        df_0.to_csv(d_path)
+        df_0.to_csv(d_path, index=False)
     else:                               # make data file if it doesn't exist
-        df.to_csv(d_path)
+        df.to_csv(d_path, index=False)
 
     return
 
@@ -112,8 +111,10 @@ if __name__ == "__main__":
         raise TypeError("Wrong url type is given. Try str for single url or list for multiple instead.")
 
     a_path = get_audio(url)
-    if os.path.isfile(a_path):
-        print("This youtuble audio is alreay added to our data. Done.")
-        sys.exit(0)
+    if os.path.isfile(d_path):
+        df_0 = pd.read_csv(d_path)
+        if a_path in df_0.audio.unique():
+            print("This youtuble audio is alreay added to our data. Done.")
+            sys.exit(0)
     t_result = get_transcript(url, lang)
     make_chunks(a_path, t_result, d_path)

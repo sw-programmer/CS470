@@ -1,7 +1,12 @@
 # CS470
 ASR Project
 
-## How to use
+## Basic requirements
+```
+pip3 install -r requirements.txt
+```
+
+## How to download audio & subtitle
 ```
 python3 collect_data.py --url=<YOUTUBE LINK>
 ```
